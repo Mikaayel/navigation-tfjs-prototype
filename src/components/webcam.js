@@ -33,27 +33,26 @@ export class Webcam {
 
 	async setup() {
 		return new Promise((resolve, reject) => {
-			const navigatorAny = navigator;
-			navigator.getUserMedia = navigator.getUserMedia ||
-				navigatorAny.webkitGetUserMedia || navigatorAny.mozGetUserMedia ||
-				navigatorAny.msGetUserMedia;
-			if (navigator.getUserMedia) {
-				navigator.getUserMedia(
-					{ video: true },
-					stream => {
-						this.webcamElement.srcObject = stream;
-						this.webcamElement.addEventListener('loadeddata', async () => {
-							this.adjustVideoSize(
-								this.webcamElement.videoWidth,
-								this.webcamElement.videoHeight);
-							resolve();
-						}, false);
+			if (navigator.mediaDevices) {
+				const options = {
+					video: {
+						height: 224,
+						width: 224
 					},
-					error => {
-						reject();
+					audio: false
+				}
+				navigator.mediaDevices.getUserMedia(options)
+					.then(stream => {
+						const video = document.getElementById('webcam');
+						video.srcObject = stream;
+						resolve();
+					})
+					.catch(error => {
+						reject(error);
 					});
-			} else {
-				reject();
+			}
+			else {
+				reject('webcam not available');
 			}
 		});
 	}

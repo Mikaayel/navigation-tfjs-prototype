@@ -40,6 +40,7 @@ class IndexPage extends Component {
 	}
 
 	async train() {
+		await tf.nextFrame();
 		if (this.controllerDataset.xs == null) {
 			throw new Error('Add some examples before training!');
 		}
@@ -103,6 +104,9 @@ class IndexPage extends Component {
 	}
 
 	init = async () => {
+		this.webcam = new Webcam(document.getElementById('webcam'));
+		this.controllerDataset = new ControllerDataset(5);
+
 		try {
 			await this.webcam.setup();
 			this.mobilenet = await this.loadMobilenet();
@@ -110,18 +114,14 @@ class IndexPage extends Component {
 		}
 		catch (err) {
 			this.setState({
-				isWebcamAvailable: true
+				isWebcamAvailable: false
 			});
 			console.log('error')
 		}
 	}
 
 	componentDidMount() {
-		this.webcam = new Webcam(document.getElementById('webcam'));
-		this.controllerDataset = new ControllerDataset(5);
-
 		this.init();
-
 		ui.setExampleHandler(label => {
 			tf.tidy(() => {
 				const img = this.webcam.capture();
@@ -158,8 +158,7 @@ class IndexPage extends Component {
 					<div>
 						<div>
 							<div>
-								<button style={this.buttonStyle} onClick={async () => {
-									await tf.nextFrame();
+								<button style={this.buttonStyle} onClick={() => {
 									this.train();
 								}}>TRAIN MODEL</button>
 								<p>{parseFloat(lossValue).toFixed(5)}</p>
@@ -178,9 +177,13 @@ class IndexPage extends Component {
 						<div>
 							<div style={this.thumbnailOuter}>
 								<div style={this.thumbnailInner}>
-									<canvas style={this.canvasStyle} width='224' height='224' id="up-thumb" />
+									<canvas
+										onClick={this.handleButtonClick}
+										style={this.canvasStyle}
+										width='224'
+										height='224'
+										id="up" />
 								</div>
-								<button style={this.thumbnailButton} onClick={this.handleButtonClick} id="up"></button>
 							</div>
 							<p>{up} examples</p>
 						</div>
@@ -188,39 +191,57 @@ class IndexPage extends Component {
 							<div>
 								<div style={this.thumbnailOuter}>
 									<div style={this.thumbnailInner}>
-										<canvas style={this.canvasStyle} width='224' height='224' id="left-thumb"></canvas>
+										<canvas
+											onClick={this.handleButtonClick}
+											style={this.canvasStyle}
+											width='224'
+											height='224'
+											id="left" />
 									</div>
-									<button style={this.thumbnailButton} onClick={this.handleButtonClick} id="left"></button>
 								</div>
 								<p>{left} examples</p>
 							</div>
 							<div>
 								<div style={this.thumbnailOuter}>
 									<div style={this.thumbnailInner}>
-										<canvas style={this.canvasStyle} width='224' height='224' id="center-thumb"></canvas>
+										<canvas
+											onClick={this.handleButtonClick}
+											style={this.canvasStyle}
+											width='224'
+											height='224'
+											id="center" />
 									</div>
-									<button style={this.thumbnailButton} onClick={this.handleButtonClick} id="center"></button>
 								</div>
 								<p>{center} examples</p>
 							</div>
 							<div>
 								<div style={this.thumbnailOuter}>
 									<div style={this.thumbnailInner}>
-										<canvas style={this.canvasStyle} width='224' height='224' id="right-thumb"></canvas>
+										<canvas
+											onClick={this.handleButtonClick}
+											style={this.canvasStyle}
+											width='224'
+											height='224'
+											id="right" />
 									</div>
-									<button style={this.thumbnailButton} onClick={this.handleButtonClick} id="right"></button>
 								</div>
 								<p>{right} examples</p>
 							</div>
 						</div>
-						<div style={this.rowStyle}>
-							<div style={this.thumbnailOuter}>
-								<div style={this.thumbnailInner}>
-									<canvas style={this.canvasStyle} width='224' height='224' id="down-thumb"></canvas>
+						<div>
+							<div>
+								<div style={this.thumbnailOuter}>
+									<div style={this.thumbnailInner}>
+										<canvas
+											onClick={this.handleButtonClick}
+											style={this.canvasStyle}
+											width='224'
+											height='224'
+											id="down" />
+									</div>
 								</div>
-								<button style={this.thumbnailButton} onClick={this.handleButtonClick} id="down"></button>
+								<p>{down} examples</p>
 							</div>
-							<p>{down} examples</p>
 						</div>
 					</div>
 				</div>

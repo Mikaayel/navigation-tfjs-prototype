@@ -5,6 +5,7 @@ export class ControllerDataset {
 		this.numClasses = numClasses;
 	}
 	addExample(example, label) {
+		console.log('addexample', example, label);
 		const y = tf.tidy(
 			() => tf.oneHot(tf.tensor1d([label]).toInt(), this.numClasses));
 
