@@ -3,8 +3,7 @@ import * as tf from '@tensorflow/tfjs';
 
 import { ControllerDataset } from '../components/controller_dataset';
 import * as ui from '../components/ui';
-import { Webcam } from '../components/webcam';
-import { setup } from '../components/web';
+import { setup, capture } from '../components/webcam';
 import '../components/styles.css';
 
 import WebcamMessage from '../components/WebcamMessage/WebcamMessage';
@@ -89,7 +88,7 @@ class IndexPage extends Component {
 		this.isPredicting = true;
 		while (this.isPredicting) {
 			const predictedClass = tf.tidy(() => {
-				const img = this.webcam.capture();
+				const img = capture();
 				const activation = this.mobilenet.predict(img);
 				const predictions = this.model.predict(activation);
 				return predictions.as1D().argMax();
@@ -105,13 +104,13 @@ class IndexPage extends Component {
 	}
 
 	init = async () => {
-		this.webcam = new Webcam(document.getElementById('webcam'));
+		// this.webcam = new Webcam();
 		this.controllerDataset = new ControllerDataset(5);
 
 		try {
 			await setup();
 			this.mobilenet = await this.loadMobilenet();
-			tf.tidy(() => this.mobilenet.predict(this.webcam.capture()));
+			tf.tidy(() => this.mobilenet.predict(capture()));
 		}
 		catch (err) {
 			this.setState({
@@ -125,7 +124,7 @@ class IndexPage extends Component {
 		this.init();
 		ui.setExampleHandler(label => {
 			tf.tidy(() => {
-				const img = this.webcam.capture();
+				const img = capture();
 				this.controllerDataset.addExample(this.mobilenet.predict(img), label);
 				ui.drawThumb(img, label);
 			});
