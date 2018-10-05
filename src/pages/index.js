@@ -4,6 +4,7 @@ import * as tf from '@tensorflow/tfjs';
 import { ControllerDataset } from '../components/controller_dataset';
 import * as ui from '../components/ui';
 import { Webcam } from '../components/webcam';
+import { setup } from '../components/web';
 import '../components/styles.css';
 
 import WebcamMessage from '../components/WebcamMessage/WebcamMessage';
@@ -108,7 +109,7 @@ class IndexPage extends Component {
 		this.controllerDataset = new ControllerDataset(5);
 
 		try {
-			await this.webcam.setup();
+			await setup();
 			this.mobilenet = await this.loadMobilenet();
 			tf.tidy(() => this.mobilenet.predict(this.webcam.capture()));
 		}
