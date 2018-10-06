@@ -8,6 +8,7 @@ import '../components/styles.css';
 
 import WebcamMessage from '../components/WebcamMessage/WebcamMessage';
 import MobilenetMessage from '../components/MobilenetMessage/MobilenetMessage';
+import Thumbnail from '../components/Thumbnail/Thumbnail';
 
 class IndexPage extends Component {
 	constructor() {
@@ -173,76 +174,8 @@ class IndexPage extends Component {
 							</div>
 						</div>
 					</div>
-					<div>
-						<div>
-							<div style={this.thumbnailOuter}>
-								<div style={this.thumbnailInner}>
-									<canvas
-										onClick={this.handleButtonClick}
-										style={this.canvasStyle}
-										width='224'
-										height='224'
-										id="up" />
-								</div>
-							</div>
-							<p>{up} examples</p>
-						</div>
-						<div style={this.rowStyle}>
-							<div>
-								<div style={this.thumbnailOuter}>
-									<div style={this.thumbnailInner}>
-										<canvas
-											onClick={this.handleButtonClick}
-											style={this.canvasStyle}
-											width='224'
-											height='224'
-											id="left" />
-									</div>
-								</div>
-								<p>{left} examples</p>
-							</div>
-							<div>
-								<div style={this.thumbnailOuter}>
-									<div style={this.thumbnailInner}>
-										<canvas
-											onClick={this.handleButtonClick}
-											style={this.canvasStyle}
-											width='224'
-											height='224'
-											id="center" />
-									</div>
-								</div>
-								<p>{center} examples</p>
-							</div>
-							<div>
-								<div style={this.thumbnailOuter}>
-									<div style={this.thumbnailInner}>
-										<canvas
-											onClick={this.handleButtonClick}
-											style={this.canvasStyle}
-											width='224'
-											height='224'
-											id="right" />
-									</div>
-								</div>
-								<p>{right} examples</p>
-							</div>
-						</div>
-						<div>
-							<div>
-								<div style={this.thumbnailOuter}>
-									<div style={this.thumbnailInner}>
-										<canvas
-											onClick={this.handleButtonClick}
-											style={this.canvasStyle}
-											width='224'
-											height='224'
-											id="down" />
-									</div>
-								</div>
-								<p>{down} examples</p>
-							</div>
-						</div>
+					<div style={{ display: 'flex'}}>
+							{ this.controls.map((item, index) =>  <Thumbnail key={index} item={item} handleButtonClick={this.handleButtonClick} />)}
 					</div>
 				</div>
 			</div >
