@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import * as tf from '@tensorflow/tfjs';
 
-import { ControllerDataset } from '../components/controller_dataset';
 import * as ui from '../components/ui';
 import { setup, capture } from '../components/webcam';
 import '../components/styles.css';
@@ -23,13 +22,13 @@ class IndexPage extends Component {
 			center: 0,
 			lossValue: 0,
 		}
-
 		this.isPredicting = false;
 		this.mobilenet = null;
 		this.model = null;
 		this.webcam = null;
-		this.controllerDataset = null;
 		this.controls = ['up', 'down', 'left', 'right', 'center'];
+		this.xs = null;
+		this.ys = null;
 	}
 	loadMobilenet = async () => {
 		const mobilenet = await tf.loadModel('https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json');
@@ -42,10 +41,9 @@ class IndexPage extends Component {
 
 	async train() {
 		await tf.nextFrame();
-		if (this.controllerDataset.xs == null) {
+		if (this.xs == null) {
 			throw new Error('Add some examples before training!');
 		}
-
 		this.model = tf.sequential({
 			layers: [
 				tf.layers.flatten({ inputShape: [7, 7, 256] }),
@@ -67,12 +65,12 @@ class IndexPage extends Component {
 		const optimizer = tf.train.adam(0.0001);
 		this.model.compile({ optimizer: optimizer, loss: 'categoricalCrossentropy' });
 		const batchSize =
-			Math.floor(this.controllerDataset.xs.shape[0] * 0.4);
+			Math.floor(this.xs.shape[0] * 0.4);
 		if (!(batchSize > 0)) {
 			throw new Error(
 				`Batch size is 0 or NaN. Please choose a non-zero fraction.`);
 		}
-		this.model.fit(this.controllerDataset.xs, this.controllerDataset.ys, {
+		this.model.fit(this.xs, this.ys, {
 			batchSize,
 			epochs: 20,
 			callbacks: {
@@ -105,9 +103,6 @@ class IndexPage extends Component {
 	}
 
 	init = async () => {
-		// this.webcam = new Webcam();
-		this.controllerDataset = new ControllerDataset(5);
-
 		try {
 			await setup();
 			this.mobilenet = await this.loadMobilenet();
@@ -121,12 +116,32 @@ class IndexPage extends Component {
 		}
 	}
 
+	addExample = (example, label) => {
+		const y = tf.tidy(
+			() => tf.oneHot(tf.tensor1d([label]).toInt(), this.controls.length));
+
+		if (this.xs == null) {
+			this.xs = tf.keep(example);
+			this.ys = tf.keep(y);
+		} else {
+			const oldX = this.xs;
+			this.xs = tf.keep(oldX.concat(example, 0));
+
+			const oldY = this.ys;
+			this.ys = tf.keep(oldY.concat(y, 0));
+
+			oldX.dispose();
+			oldY.dispose();
+			y.dispose();
+		}
+	}
+
 	componentDidMount() {
 		this.init();
 		ui.setExampleHandler(label => {
 			tf.tidy(() => {
 				const img = capture();
-				this.controllerDataset.addExample(this.mobilenet.predict(img), label);
+				this.addExample(this.mobilenet.predict(img), label);
 				ui.drawThumb(img, label);
 			});
 		});
@@ -143,11 +158,6 @@ class IndexPage extends Component {
 		const {
 			isMobilenetLoading,
 			isWebcamAvailable,
-			up,
-			down,
-			left,
-			right,
-			center,
 			lossValue,
 		} = this.state;
 		return (
@@ -174,8 +184,8 @@ class IndexPage extends Component {
 							</div>
 						</div>
 					</div>
-					<div style={{ display: 'flex'}}>
-							{ this.controls.map((item, index) =>  <Thumbnail key={index} item={item} handleButtonClick={this.handleButtonClick} />)}
+					<div style={{ display: 'flex' }}>
+						{this.controls.map((item, index) => <Thumbnail key={index} item={item} handleButtonClick={this.handleButtonClick} />)}
 					</div>
 				</div>
 			</div >
@@ -205,46 +215,12 @@ class IndexPage extends Component {
 		transform: 'scaleX(-1)',
 	};
 
-	canvasStyle = {
-		height: '66px',
-		transform: 'scaleX(-1)',
-	};
-
 	rowStyle = {
 		display: 'flex',
 	};
 
 	buttonStyle = {
 		border: '1px solid red'
-	};
-
-	thumbnailOuter = {
-		background: 'black',
-		border: '1px solid #585858',
-		borderRadius: '4px',
-		boxSizing: 'border-box',
-		display: 'inline-block',
-		padding: '9px',
-		position: 'relative',
-		transition: 'box-shadow 0.3s',
-	}
-
-	thumbnailInner = {
-		border: '1px solid #585858',
-		borderRadius: '4px',
-		boxSizing: 'border-box',
-		display: 'flex',
-		justifyContent: 'center',
-		overflow: 'hidden',
-		width: '66px'
-	}
-
-	thumbnailButton = {
-		height: '100%',
-		left: '0',
-		position: 'absolute',
-		top: '0',
-		width: '100%'
 	};
 }
 
