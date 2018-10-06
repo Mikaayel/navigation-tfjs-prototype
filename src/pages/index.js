@@ -21,6 +21,7 @@ class IndexPage extends Component {
 			right: 0,
 			center: 0,
 			lossValue: 0,
+			menuOpen: true,
 		}
 		this.isPredicting = false;
 		this.mobilenet = null;
@@ -39,7 +40,7 @@ class IndexPage extends Component {
 		return tf.model({ inputs: mobilenet.inputs, outputs: layer.output });
 	}
 
-	async train() {
+	train = async () => {
 		await tf.nextFrame();
 		if (this.xs == null) {
 			throw new Error('Add some examples before training!');
@@ -169,12 +170,14 @@ class IndexPage extends Component {
 					<div>
 						<div>
 							<div>
-								<button style={this.buttonStyle} onClick={() => {
-									this.train();
-								}}>TRAIN MODEL</button>
+								<button
+									style={this.buttonStyle}
+									onClick={this.train}>TRAIN MODEL</button>
 								<p>{parseFloat(lossValue).toFixed(5)}</p>
 							</div>
-							<button style={this.buttonStyle} onClick={this.predict}>PREDICT</button>
+							<button
+								style={this.buttonStyle}
+								onClick={this.predict}>PREDICT</button>
 						</div>
 						<div>
 							<div style={this.webcamOuter}>
