@@ -8,6 +8,7 @@ import '../components/styles.css';
 import WebcamMessage from '../components/WebcamMessage/WebcamMessage';
 import MobilenetMessage from '../components/MobilenetMessage/MobilenetMessage';
 import Thumbnail from '../components/Thumbnail/Thumbnail';
+import MockSite from '../components/MockSite/MockSite';
 
 class IndexPage extends Component {
 	constructor() {
@@ -20,6 +21,7 @@ class IndexPage extends Component {
 			left: 0,
 			right: 0,
 			center: 0,
+			enter: 0,
 			lossValue: 0,
 			isMenuOpen: true,
 		}
@@ -27,7 +29,7 @@ class IndexPage extends Component {
 		this.mobilenet = null;
 		this.model = null;
 		this.webcam = null;
-		this.controls = ['up', 'down', 'left', 'right', 'center'];
+		this.controls = ['up', 'down', 'left', 'right', 'center', 'enter'];
 		this.xs = null;
 		this.ys = null;
 	}
@@ -55,7 +57,7 @@ class IndexPage extends Component {
 					useBias: true
 				}),
 				tf.layers.dense({
-					units: 5,
+					units: this.controls.length,
 					kernelInitializer: 'varianceScaling',
 					useBias: false,
 					activation: 'softmax'
@@ -85,8 +87,14 @@ class IndexPage extends Component {
 	}
 
 	predict = async () => {
-		this.setState({ isMenuOpen: false });
+		let hasCentered = false;
+		this.setState({ isMenuOpen: false }, () => {
+			const mainEl = document.getElementById('title');
+			mainEl.focus();
+			console.log(mainEl);
+		});
 		this.isPredicting = true;
+
 		while (this.isPredicting) {
 			const predictedClass = tf.tidy(() => {
 				const img = capture();
@@ -100,11 +108,55 @@ class IndexPage extends Component {
 			this.setState({
 				activeThumbnail: this.controls[classId]
 			});
+			if (hasCentered === true && this.controls[classId] === 'down') {
+				hasCentered = false;
+				this.nextFocus();
+			} else if (hasCentered === true && this.controls[classId] === 'up') {
+				hasCentered = false;
+				this.prevFocus();
+			} else if (hasCentered === true && this.controls[classId] === 'enter') {
+				hasCentered = false;
+				this.pressButton();
+			}
+
+			else if (this.controls[classId] === 'center') {
+				hasCentered = true;
+			}
 			await tf.nextFrame();
 		}
 	}
 
+	pressButton() {
+		const elem = document.activeElement;
+		elem.click();
+	}
+
+	nextFocus() {
+		var focussableElements = 'a:not([disabled]), button:not([disabled]), input[type=text]:not([disabled]), [tabindex]:not([disabled]):not([tabindex="-1"])';
+		var focussable = Array.prototype.filter.call(document.querySelectorAll(focussableElements),
+			function (element) {
+				return element.offsetWidth > 0 || element.offsetHeight > 0 || element === document.activeElement
+			});
+		var index = focussable.indexOf(document.activeElement);
+		if(index < focussable.length - 1) {
+			focussable[index + 1].focus();
+		}
+	}
+
+	prevFocus() {
+		var focussableElements = 'a:not([disabled]), button:not([disabled]), input[type=text]:not([disabled]), [tabindex]:not([disabled]):not([tabindex="-1"])';
+		var focussable = Array.prototype.filter.call(document.querySelectorAll(focussableElements),
+			function (element) {
+				return element.offsetWidth > 0 || element.offsetHeight > 0 || element === document.activeElement
+			});
+		var index = focussable.indexOf(document.activeElement);
+		if(index > 0) {
+			focussable[index - 1].focus();
+		}
+	}
+
 	init = async () => {
+
 		try {
 			await setup();
 			this.mobilenet = await this.loadMobilenet();
@@ -147,9 +199,13 @@ class IndexPage extends Component {
 	}
 
 	handleButtonClick = (e) => {
+		const direction = e.target.id;
 		const key = this.controls.findIndex((item) => {
-			return item === e.target.id;
+			return item === direction;
 		});
+		this.setState((state) => ({
+			[direction]: state[direction] + 1
+		}));
 		ui.handler(key);
 	}
 
@@ -172,40 +228,67 @@ class IndexPage extends Component {
 					onClick={this.toggleMenu}>|||</button>
 				{!isWebcamAvailable && <WebcamMessage />}
 				{!!isMobilenetLoading && <MobilenetMessage />}
-				<div >
-					{!!isMenuOpen &&
-						<div>
-							<h1>Direction</h1>
+				<div style={isMenuOpen ? this.containerActive : this.containerPassive}>
+					<div>
+						{!!isMenuOpen &&
 							<div>
+								<h1 style={{ textAlign: 'center'}}>Navigation with TFJS</h1>
+								<h2 style={{ textAlign: 'center'}}>by Mika Rehman</h2>
+								<p style={{ textAlign: 'center'}}>git: <a href="https://github.com/Mikaayel/navigation-tfjs-prototype" target="_blank">https://github.com/Mikaayel/navigation-tfjs-prototype</a></p>
+								<p style={{ textAlign: 'center'}}>linkedin: <a href="https://www.linkedin.com/in/mika-rehman/">https://www.linkedin.com/in/mika-rehman/</a></p>
+								<p style={{ textAlign: 'center'}}>twitter: <a>@mikarehman</a></p>
+								<div>
+									<button
+										style={this.buttonStyle}
+										onClick={this.train}>TRAIN MODEL</button>
+									<p>{parseFloat(lossValue).toFixed(5)}</p>
+								</div>
 								<button
 									style={this.buttonStyle}
-									onClick={this.train}>TRAIN MODEL</button>
-								<p>{parseFloat(lossValue).toFixed(5)}</p>
+									onClick={this.predict}>PREDICT</button>
 							</div>
-							<button
-								style={this.buttonStyle}
-								onClick={this.predict}>PREDICT</button>
+						}
+						<div>
+							<div style={isMenuOpen ? this.webcamActive : this.webcamPassive}>
+								<video
+									style={isMenuOpen ? this.videoStyleActive : this.videoStylePassive}
+									autoPlay
+									playsInline
+									muted
+									id="webcam"
+									width="224"
+									height="224" />
+							</div>
 						</div>
+						<div style={isMenuOpen ? this.thumbnailsContainerActive : this.thumbnailsContainerPassive}>
+							{this.controls.map((item, index) => (
+								<Thumbnail
+									key={index}
+									item={item}
+									handleButtonClick={this.handleButtonClick}
+									isMenuOpen={isMenuOpen}
+									activeThumbnail={activeThumbnail}
+									total={this.state[item]} />
+							))}
+						</div>
+					</div>
+					{
+						!isMenuOpen && <MockSite direction={activeThumbnail} />
 					}
-					<div>
-						<div style={isMenuOpen ? this.webcamActive : this.webcamPassive}>
-							<video
-								style={isMenuOpen ? this.videoStyle : this.videoStylePassive}
-								autoPlay
-								playsInline
-								muted
-								id="webcam"
-								width="224"
-								height="224" />
-						</div>
-					</div>
-					<div style={isMenuOpen ? this.thumbnailsContainerActive : this.thumbnailsContainerPassive}>
-						{this.controls.map((item, index) => <Thumbnail key={index} item={item} handleButtonClick={this.handleButtonClick} isMenuOpen={isMenuOpen} activeThumbnail={activeThumbnail} />)}
-					</div>
 				</div>
+
 			</div >
 		);
 	}
+
+	containerActive = {
+		display: 'flex',
+		flexDirection: 'column'
+	};
+
+	containerPassive = {
+		display: 'flex',
+	};
 
 	thumbnailsContainerActive = {
 		display: 'flex',
@@ -232,12 +315,9 @@ class IndexPage extends Component {
 	}
 
 	webcamStyle = {
-		borderRadius: '4px',
-		border: '1px solid #585858',
-		boxSizing: 'border-box',
 		display: 'flex',
-		justifyContent: 'center',
-		overflow: 'hidden',
+		justifyContent: 'flex-start',
+		padding: '2px',
 	}
 
 	webcamActive = {
@@ -251,13 +331,19 @@ class IndexPage extends Component {
 	};
 
 	videoStyle = {
-		height: '160px',
 		transform: 'scaleX(-1)',
 	};
 
+	videoStyleActive = {
+		...this.videoStyle,
+		height: '160px',
+		width: '160px',
+	};
+
 	videoStylePassive = {
+		...this.videoStyle,
 		height: '66px',
-		transform: 'scaleX(-1)',
+		width: '66px',
 	};
 
 	rowStyle = {
@@ -265,7 +351,12 @@ class IndexPage extends Component {
 	};
 
 	buttonStyle = {
-		border: '1px solid red'
+		border: '1px solid orange',
+		backgroundColor: 'orange',
+		padding: '10px',
+		margin: '2px',
+		borderRadius: '5px',
+		color: 'white',
 	};
 }
 

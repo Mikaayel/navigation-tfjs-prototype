@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 
-const CONTROLS = ['up', 'down', 'left', 'right', 'center'];
+const CONTROLS = ['up', 'down', 'left', 'right', 'center', 'enter'];
 
 export let addExampleHandler;
 

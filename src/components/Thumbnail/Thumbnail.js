@@ -2,6 +2,7 @@ import React from 'react';
 
 const containerStyle = {
 	position: 'relative',
+	padding: '2px',
 };
 
 const thumbnailInner = {
@@ -21,7 +22,7 @@ const canvasStyle = {
 const overlayStyle = {
 	position: 'absolute',
 	width: '66px',
-    height: '66px',
+	height: '66px',
 	top: '0',
 	pointerEvents: 'none',
 };
@@ -35,7 +36,7 @@ const overlayStylePassive = {
 	...overlayStyle,
 }
 
-const Thumbnail = ({ item, handleButtonClick, isMenuOpen, activeThumbnail }) => (
+const Thumbnail = ({ item, handleButtonClick, isMenuOpen, activeThumbnail, total }) => (
 	<div style={containerStyle}>
 		<div style={thumbnailInner}>
 			<canvas
@@ -45,8 +46,8 @@ const Thumbnail = ({ item, handleButtonClick, isMenuOpen, activeThumbnail }) => 
 				height='224'
 				id={item} />
 		</div>
-		<div style={activeThumbnail === item ? overlayStyleActive: overlayStylePassive}></div>
-		{ isMenuOpen && <p>{item}</p> }
+		<div style={activeThumbnail === item ? overlayStyleActive : overlayStylePassive}></div>
+		{isMenuOpen && <p>{item}: {total}</p>}
 	</div>
 );
 
