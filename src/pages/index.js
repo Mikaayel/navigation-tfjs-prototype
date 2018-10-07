@@ -21,7 +21,7 @@ class IndexPage extends Component {
 			right: 0,
 			center: 0,
 			lossValue: 0,
-			menuOpen: true,
+			isMenuOpen: true,
 		}
 		this.isPredicting = false;
 		this.mobilenet = null;
@@ -85,6 +85,7 @@ class IndexPage extends Component {
 	}
 
 	predict = async () => {
+		this.setState({ isMenuOpen: false });
 		this.isPredicting = true;
 		while (this.isPredicting) {
 			const predictedClass = tf.tidy(() => {
@@ -96,9 +97,9 @@ class IndexPage extends Component {
 
 			const classId = (await predictedClass.data())[0];
 			predictedClass.dispose();
-
-			const CONTROLS = ['up', 'down', 'left', 'right', 'center'];
-			console.log(CONTROLS[classId]);
+			this.setState({
+				activeThumbnail: this.controls[classId]
+			});
 			await tf.nextFrame();
 		}
 	}
@@ -120,17 +121,14 @@ class IndexPage extends Component {
 	addExample = (example, label) => {
 		const y = tf.tidy(
 			() => tf.oneHot(tf.tensor1d([label]).toInt(), this.controls.length));
-
 		if (this.xs == null) {
 			this.xs = tf.keep(example);
 			this.ys = tf.keep(y);
 		} else {
 			const oldX = this.xs;
 			this.xs = tf.keep(oldX.concat(example, 0));
-
 			const oldY = this.ys;
 			this.ys = tf.keep(oldY.concat(y, 0));
-
 			oldX.dispose();
 			oldY.dispose();
 			y.dispose();
@@ -155,20 +153,29 @@ class IndexPage extends Component {
 		ui.handler(key);
 	}
 
+	toggleMenu = () => {
+		this.setState((state) => ({ isMenuOpen: !state.isMenuOpen }));
+	}
+
 	render() {
 		const {
 			isMobilenetLoading,
 			isWebcamAvailable,
 			lossValue,
+			isMenuOpen,
+			activeThumbnail
 		} = this.state;
 		return (
 			<div>
-				<h1>Direction</h1>
+				<button
+					style={isMenuOpen ? this.menuActive : this.menuPassive}
+					onClick={this.toggleMenu}>|||</button>
 				{!isWebcamAvailable && <WebcamMessage />}
 				{!!isMobilenetLoading && <MobilenetMessage />}
-				<div id="controller">
-					<div>
+				<div >
+					{!!isMenuOpen &&
 						<div>
+							<h1>Direction</h1>
 							<div>
 								<button
 									style={this.buttonStyle}
@@ -179,42 +186,77 @@ class IndexPage extends Component {
 								style={this.buttonStyle}
 								onClick={this.predict}>PREDICT</button>
 						</div>
-						<div>
-							<div style={this.webcamOuter}>
-								<div style={this.webcamInner}>
-									<video style={this.videoStyle} autoPlay playsInline muted id="webcam" width="224" height="224"></video>
-								</div>
-							</div>
+					}
+					<div>
+						<div style={isMenuOpen ? this.webcamActive : this.webcamPassive}>
+							<video
+								style={isMenuOpen ? this.videoStyle : this.videoStylePassive}
+								autoPlay
+								playsInline
+								muted
+								id="webcam"
+								width="224"
+								height="224" />
 						</div>
 					</div>
-					<div style={{ display: 'flex' }}>
-						{this.controls.map((item, index) => <Thumbnail key={index} item={item} handleButtonClick={this.handleButtonClick} />)}
+					<div style={isMenuOpen ? this.thumbnailsContainerActive : this.thumbnailsContainerPassive}>
+						{this.controls.map((item, index) => <Thumbnail key={index} item={item} handleButtonClick={this.handleButtonClick} isMenuOpen={isMenuOpen} activeThumbnail={activeThumbnail} />)}
 					</div>
 				</div>
 			</div >
 		);
 	}
-	webcamOuter = {
-		background: 'black',
-		border: '1px solid #585858',
-		borderRadius: '4px',
-		boxSizing: 'border-box',
-		display: 'inline-block',
-		padding: '9px',
+
+	thumbnailsContainerActive = {
+		display: 'flex',
 	};
 
-	webcamInner = {
+	thumbnailsContainerPassive = {
+		display: 'flex',
+		flexDirection: 'column',
+	};
+
+	menuStyle = {
+		width: '66px',
+		height: '66px',
+		fontSize: '30px',
+	}
+
+	menuActive = {
+		...this.menuStyle,
+		transform: 'rotate(90deg)',
+	}
+
+	menuPassive = {
+		...this.menuStyle,
+	}
+
+	webcamStyle = {
 		borderRadius: '4px',
 		border: '1px solid #585858',
 		boxSizing: 'border-box',
 		display: 'flex',
 		justifyContent: 'center',
 		overflow: 'hidden',
+	}
+
+	webcamActive = {
+		...this.webcamStyle,
 		width: '160px',
+	};
+
+	webcamPassive = {
+		...this.webcamStyle,
+		width: '66px',
 	};
 
 	videoStyle = {
 		height: '160px',
+		transform: 'scaleX(-1)',
+	};
+
+	videoStylePassive = {
+		height: '66px',
 		transform: 'scaleX(-1)',
 	};
 

@@ -1,24 +1,16 @@
 import React from 'react';
 
-const thumbnailOuter = {
-	background: 'black',
-	border: '1px solid #585858',
-	borderRadius: '4px',
-	boxSizing: 'border-box',
-	display: 'inline-block',
-	padding: '9px',
+const containerStyle = {
 	position: 'relative',
-	transition: 'box-shadow 0.3s',
-}
+};
 
 const thumbnailInner = {
-	border: '1px solid #585858',
-	borderRadius: '4px',
+	background: 'black',
 	boxSizing: 'border-box',
 	display: 'flex',
 	justifyContent: 'center',
 	overflow: 'hidden',
-	width: '66px'
+	width: '66px',
 }
 
 const canvasStyle = {
@@ -26,19 +18,35 @@ const canvasStyle = {
 	transform: 'scaleX(-1)',
 };
 
-const Thumbnail = ({ item, handleButtonClick}) => (
-	<div>
-		<div style={thumbnailOuter}>
-			<div style={thumbnailInner}>
-				<canvas
-					onClick={handleButtonClick}
-					style={canvasStyle}
-					width='224'
-					height='224'
-					id={item} />
-			</div>
+const overlayStyle = {
+	position: 'absolute',
+	width: '66px',
+    height: '66px',
+	top: '0',
+	pointerEvents: 'none',
+};
+
+const overlayStyleActive = {
+	...overlayStyle,
+	backgroundColor: 'rgba(255, 255, 0, .5)',
+}
+
+const overlayStylePassive = {
+	...overlayStyle,
+}
+
+const Thumbnail = ({ item, handleButtonClick, isMenuOpen, activeThumbnail }) => (
+	<div style={containerStyle}>
+		<div style={thumbnailInner}>
+			<canvas
+				onClick={handleButtonClick}
+				style={canvasStyle}
+				width='224'
+				height='224'
+				id={item} />
 		</div>
-		<p>{item} examples</p>
+		<div style={activeThumbnail === item ? overlayStyleActive: overlayStylePassive}></div>
+		{ isMenuOpen && <p>{item}</p> }
 	</div>
 );
 
