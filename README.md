@@ -10,3 +10,6 @@ This model was based of the tensorflow pacman app but has been extensively re-wr
 ## Getting Started
 * run ```npm install``` or ```yarn install```
 * run ```npm run dev``` or ```yarn dev```
+
+## compatibility
+I have only run this prototype on Chrome v69.0.34
